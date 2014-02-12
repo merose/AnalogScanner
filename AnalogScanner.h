@@ -18,7 +18,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // Implements an object that can read the AVR analog inputs without
 // blocking. This class allows the caller to specify a scan order
 // for the analog inputs, then begin scanning. At that point the
@@ -37,12 +36,11 @@ class AnalogScanner {
   // one scanner object can initiate ADC reads at one time.
   static AnalogScanner *pCurrentScanner;
 
-  // The number of analog input pins.
-#ifdef A15
-  static const int ANALOG_INPUTS = 16;
-#else
-  static const int ANALOG_INPUTS = 6;
-#endif
+  // The maximum number of analog input pins. Some Atmel
+  // chips support fewer inputs than this.
+  static const int ANALOG_INPUTS = 15;
+
+  // The maximum length of the analog input scan order.
   static const int SCAN_ORDER_MAX = 50;
 
   // The analog input values.
@@ -60,16 +58,20 @@ class AnalogScanner {
 
   // An array of pointers to callback routines invoked when
   // new values are available.
-  void (*pCallback[ANALOG_INPUTS])(int pin, int value);
+  void (*pCallback[ANALOG_INPUTS])(int index, int pin, int value);
 
   // The analog voltage reference value, as defined in the
   // built-in analogReference() Arduino function.
   int analogRef;
   
-  // Gets the pin index for a pin value. For example, A0 has
+  // Gets the pin index for a pin number. For example, A0 has
   // the value 14 on the AtMega328, but has pin index 0 for
   // specifying in the ADMUX register.
   int getPinIndex(int pin);
+
+  // Gets the pin number corresponding to an ADC pin index
+  // index. For example, 0 corresponds to pin A0.
+  int getPinForIndex(int index);
 
   // Processes a new ADC input value for the current scan pin.
   void processScan();
@@ -84,7 +86,7 @@ class AnalogScanner {
   // Sets a callback function for an analog pin. The callback
   // function will be invoked as soon as a new ADC value is
   // available.
-  void setCallback(int pin, void (*p)(int pin, int value));
+  void setCallback(int pin, void (*p)(int index, int pin, int value));
   
   // Sets the scan order. A single pin may be specified
   // multiple times in the scan order to increase the rate

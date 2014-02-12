@@ -77,6 +77,10 @@ Then, read the latest analog values whenever you like.
         delay(100); // Wait for new values.
     }
 
+Calls expecting a pin number also accept a zero-relative pin index, where 0=A0, 1=A1, and so on. You can either pass the pin number constant defined by the Arduino libraries (A3, for example), or the corresponding analog pin index (3, for example).
+
+**Note:** If you use a pin index that is not supported, zero will be used instead.
+
 Examples
 --------
 The `examples/` subdirectory contains `analog_read_all.ino`, an example program that reads each analog input available on the Uno repeatedly (A0 through A6). The values are written to `Serial` once per second.
@@ -89,7 +93,7 @@ If you want to process new values as soon as they are read, you can
 use `setCallback()` to specify a function that should be called as
 soon as new values are read.
 
-    void processValue(int pinIndex, int value) {
+    void processValue(int index, int pin, int value) {
         ... process the new value ...
     }
 
@@ -97,8 +101,9 @@ soon as new values are read.
 
     scanner.setCallback(A0, processValue);
 
-**WARNING:** The call to the callback function is processed from within the ADC interrupt handler. This can happen as often as 10,000 times per second, if only one analog pin is in the scan order. The processing function must operate quickly and return. Further, it should not invoke other libraries that are relatively slow, such as `Serial`. Do not write debugging output from the callback handler or you will likely hang the Arduino.
+The index value is in the range 0 through 15, and represents the zero-relative pin index, where 0=A0 though 15=A15. (Different processors support different numbers of analog pins.) The pin value is the Arduino pin definition constant, from A0 through A15.
 
+**WARNING:** The call to the callback function is processed from within the ADC interrupt handler. This can happen as often as 10,000 times per second, if only one analog pin is in the scan order. The processing function must operate quickly and return. Further, it should not invoke other libraries that are relatively slow, such as `Serial`. Do not write debugging output from the callback handler or you will likely hang the Arduino.
 
 Instead, only use callbacks if you need to perform some processing for each input value, such as applying a digital filter to smooth values from a noisy sensor or to square up edges of an analog signal.
 
@@ -116,11 +121,11 @@ The constructor to create a new instance of the analog input scanner. Most sketc
 
 The new instance will have an empty scan order, so no reads will be performed, by  default. Set the scanning order by calling `setScanOrder()`, and start scanning by calling `beginScanning()`.
 
-### `void setCallback(int pin, void (*pFn)(int pin, int value))`
+### `void setCallback(int pin, void (*pFn)(int index, int pin, int value))`
 
 Sets a callback function for an analog pin. The callback function will be invoked whenever a new value is read from the specified pin. Define the callback function like this:
 
-    void myCallback(int pin, int newValue) {
+    void myCallback(int index, int pin, int newValue) {
         ... process the value ...
     }
 
