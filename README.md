@@ -77,6 +77,12 @@ Then, read the latest analog values whenever you like.
         delay(100); // Wait for new values.
     }
 
+Examples
+--------
+The `examples/` subdirectory contains `analog_read_all.ino`, an example program that reads each analog input available on the Uno repeatedly (A0 through A6). The values are written to `Serial` once per second.
+
+**Note:** The analog inputs are scanned as fast as possible, usually about 10 pins per millisecond. Only the most recent value is displayed each second by the example program.
+
 Using Read Callbacks
 --------------------
 If you want to process new values as soon as they are read, you can
@@ -91,7 +97,7 @@ soon as new values are read.
 
     scanner.setCallback(A0, processValue);
 
-*WARNINGS:* The call to the callback function is processed from within the ADC interrupt handler. This can happen as often as 10,000 times per second, if only one analog pin is in the scan order. The processing function must operate quickly and return. Further, it should not invoke other libraries that are relatively slow, such as `Serial`. Do not write debugging output from the callback handler or you will likely hang the Arduino.
+**WARNING:** The call to the callback function is processed from within the ADC interrupt handler. This can happen as often as 10,000 times per second, if only one analog pin is in the scan order. The processing function must operate quickly and return. Further, it should not invoke other libraries that are relatively slow, such as `Serial`. Do not write debugging output from the callback handler or you will likely hang the Arduino.
 
 
 Instead, only use callbacks if you need to perform some processing for each input value, such as applying a digital filter to smooth values from a noisy sensor or to square up edges of an analog signal.
