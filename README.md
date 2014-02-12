@@ -104,7 +104,7 @@ Instead, only use callbacks if you need to perform some processing for each inpu
 
 References
 ----------
-*AtMega328 reference manual - http://www.atmel.com/Images/Atmel-8271-8-bit-AVR-Microcontroller-ATmega48A-48PA-88A-88PA-168A-168PA-328-328P_datasheet.pdf
+* AtMega328 reference manual - http://www.atmel.com/Images/Atmel-8271-8-bit-AVR-Microcontroller-ATmega48A-48PA-88A-88PA-168A-168PA-328-328P_datasheet.pdf
 
 API Reference
 -------------
