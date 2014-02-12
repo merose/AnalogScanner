@@ -102,6 +102,10 @@ soon as new values are read.
 
 Instead, only use callbacks if you need to perform some processing for each input value, such as applying a digital filter to smooth values from a noisy sensor or to square up edges of an analog signal.
 
+References
+----------
+*[[http://www.atmel.com/Images/Atmel-8271-8-bit-AVR-Microcontroller-ATmega48A-48PA-88A-88PA-168A-168PA-328-328P_datasheet.pdf|AtMega328 reference manual]]
+
 API Reference
 -------------
 Only the public API is described here. More information about the private class members and the implementation can be found within the source files.

@@ -194,11 +194,14 @@ void AnalogScanner::processScan() {
   int high = ADCH;
   int pin = scanOrder[currentIndex];
   values[pin] = (high << 8) | low;
+
+  // Invoke the next scan before the callback, to make the
+  // read rate more uniform.
+  startNextScan();
+
   if (pCallback[pin] != NULL) {
     pCallback[pin](pin, values[pin]);
   }
-    
-  startNextScan();
 }
 
 // Handles the ADC completion interrupt by requesting that the
