@@ -118,9 +118,6 @@ Then set the callback to apply to a pin like this (for pin A2, for example):
 
     scanner.setCallback(A2, myCallback);
 
-  // Sets the scan order. A single pin may be specified
-  // multiple times in the scan order to increase the rate
-  // at which it is read.
 ### `void setScanOrder(int n, int order[])`
   
 Sets the order in which the analog pins are read. The scan order is specified in an array of integer pin numbers or pin indices (0-relative).
