@@ -1,0 +1,8 @@
+AnalogScanner	KEYWORD1
+
+setCallback	KEYWORD2
+setScanOrder	KEYWORD2
+getValue	KEYWORD2
+setAnalogReference	KEYWORD2
+beginScanning	KEYWORD2
+endScanning	KEYWORD2
