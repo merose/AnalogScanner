@@ -106,7 +106,7 @@ The constructor to create a new instance of the analog input scanner. Most sketc
 
 The new instance will have an empty scan order, so no reads will be performed, by  default. Set the scanning order by calling `setScanOrder()`, and start scanning by calling `beginScanning()`.
 
-### `void setCallback(int pin, void (*pCallback)(int pin, int value))`
+### `void setCallback(int pin, void (*pFn)(int pin, int value))`
 
 Sets a callback function for an analog pin. The callback function will be invoked whenever a new value is read from the specified pin. Define the callback function like this:
 
