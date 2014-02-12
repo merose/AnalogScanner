@@ -156,9 +156,9 @@ void AnalogScanner::setAnalogReference(int reference) {
 // Begins scanning the analog input pins.
 void AnalogScanner::beginScanning() {
   pCurrentScanner = this;
-  //  sbi(ADCSRA, ADEN); // Enable the ADC.
-  //  delay(1);
-  //  cbi(ADMUX, ADLAR); // Make sure the ADC value it right-jusitified.
+  sbi(ADCSRA, ADEN); // Enable the ADC.
+  delay(1);
+  cbi(ADMUX, ADLAR); // Make sure the ADC value it right-jusitified.
   sbi(ADCSRA, ADIE); // Enable ADC complete interrupts.
 
   startNextScan();    
