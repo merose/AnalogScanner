@@ -48,7 +48,7 @@ class AnalogScanner {
 
   // The scan order. the same pin may be specified multiple
   // times, in order to read some pins more often.
-  int scanOrder[ANALOG_INPUTS];
+  int scanOrder[SCAN_ORDER_MAX];
 
   // The size of the scan order.
   int scanOrderSize;
