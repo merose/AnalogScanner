@@ -26,7 +26,7 @@ const int SCAN_COUNT = sizeof(scanOrder) / sizeof(scanOrder[0]);
 // Sets the scan order to A0 through A5, in turn, and begins reading
 // analog values.
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(38400);
   scanner.setScanOrder(SCAN_COUNT, scanOrder);
   scanner.beginScanning();
 }
@@ -38,7 +38,7 @@ void loop() {
     if (i > 0) {
       Serial.print(" ");
     }
-    Serial.print("v");
+    Serial.print("A");
     Serial.print(i);
     Serial.print("=");
     Serial.print(scanner.getValue(scanOrder[i]));
