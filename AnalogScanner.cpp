@@ -126,55 +126,25 @@ int AnalogScanner::getPinIndex(int pin) {
   }
 }
 
-// Gets the Arduino pin number corresponding to an
-// analog input index. For example, 0 corresponds to
-// A0, 1 to A1, and so on.
-int AnalogScanner::getPinForIndex(int index) {
-  switch (index) {
-  case 0: return A0;
-  case 1: return A1;
-  case 2: return A2;
-  case 3: return A3;
-  case 4: return A4;
-  case 5: return A5;
-  case 6: return A6;
-  case 7: return A7;
-
-#ifdef A8
-  case 8: return A8;
+// Gets the pin number for a pin or channel.
+// Code from wiring_analog.c, lines 44-57.
+uint8_t AnalogScanner::normalizePin(uint8_t pin) {
+#if defined(analogPinToChannel)
+#if defined(__AVR_ATmega32U4__)
+  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
+#endif
+  pin = analogPinToChannel(pin);
+#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  if (pin >= 54) pin -= 54; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega32U4__)
+  if (pin >= 18) pin -= 18; // allow for channel or pin numbers
+#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
+  if (pin >= 24) pin -= 24; // allow for channel or pin numbers
+#else
+  if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
 
-#ifdef A9
-  case 9: return A9;
-#endif
-
-#ifdef A10
-  case 10: return A10;
-#endif
-
-#ifdef A11
-  case 11: return A11;
-#endif
-
-#ifdef A12
-  case 12: return A12;
-#endif
-
-#ifdef A13
-  case 13: return A13;
-#endif
-
-#ifdef A14
-  case 14: return A14;
-#endif
-
-#ifdef A15
-  case 15: return A15;
-#endif
-
-  default:
-    return A0;
-  }
+  return pin;
 }
 
 // Creates a new instance of the analog input scanner. Initializes
@@ -201,10 +171,11 @@ void AnalogScanner::setCallback(int pin, void (*p)(int index, int pin, int value
 // Sets the scan order for the analog pins. The same pin may
 // be specified multiple times if a pin should be sampled more
 // often.
-void AnalogScanner::setScanOrder(int n, int order[]) {
+void AnalogScanner::setScanOrder(int n, const int order[]) {
   scanOrderSize = min(SCAN_ORDER_MAX, n);
   for (int i=0; i < scanOrderSize; ++i) {
-    scanOrder[i] = getPinIndex(order[i]);
+    requestedPins[i] = order[i];
+    normalizedPins[i] = normalizePin(order[i]);
   }
 }
 
@@ -228,7 +199,7 @@ void AnalogScanner::beginScanning() {
   pCurrentScanner = this;
   sbi(ADCSRA, ADEN); // Enable the ADC.
   delay(1);
-  cbi(ADMUX, ADLAR); // Make sure the ADC value it right-jusitified.
+  cbi(ADMUX, ADLAR); // Make sure the ADC value is right-justified.
   sbi(ADCSRA, ADIE); // Enable ADC complete interrupts.
 
   startNextScan();    
@@ -247,12 +218,13 @@ void AnalogScanner::startNextScan() {
     if (++currentIndex >= scanOrderSize) {
       currentIndex = 0;
     }
-    int index = scanOrder[currentIndex];
+    currentPin = requestedPins[currentIndex];
+    int pin = normalizedPins[currentIndex];
 #ifdef MUX5
     // Set whether we're reading from inputs 0-7 or 8-15.
-    ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((index >> 3) & 0x01) << MUX5);
+    ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
 #endif
-    ADMUX = (analogRef << 6) | (index & 7);
+    ADMUX = (analogRef << 6) | (pin & 7);
     sbi(ADCSRA, ADSC); // Start the ADC conversion.
   }
 }
@@ -262,7 +234,8 @@ void AnalogScanner::processScan() {
   // We must read ADCL first, which locks ADCH until it is read.
   int low = ADCL;
   int high = ADCH;
-  int index = scanOrder[currentIndex];
+  int index = getPinIndex(currentPin);
+  int pin = currentPin;
   values[index] = (high << 8) | low;
 
   // Invoke the next scan before the callback, to make the
@@ -270,7 +243,7 @@ void AnalogScanner::processScan() {
   startNextScan();
 
   if (pCallback[index] != NULL) {
-    pCallback[index](index, getPinForIndex(index), values[index]);
+    pCallback[index](currentIndex, pin, values[index]);
   }
 }
 

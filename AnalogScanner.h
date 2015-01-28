@@ -29,6 +29,8 @@
 //
 // See the accompanying documentation for API details.
 
+#include <stdint.h>
+
 class AnalogScanner {
 
  private:
@@ -41,20 +43,27 @@ class AnalogScanner {
   static const int ANALOG_INPUTS = 15;
 
   // The maximum length of the analog input scan order.
-  static const int SCAN_ORDER_MAX = 50;
+  static const int SCAN_ORDER_MAX = 10;
 
   // The analog input values.
   volatile int values[ANALOG_INPUTS];
 
   // The scan order. the same pin may be specified multiple
   // times, in order to read some pins more often.
-  int scanOrder[SCAN_ORDER_MAX];
+  volatile uint8_t requestedPins[SCAN_ORDER_MAX];
+
+  // The normalized pin values for each pin to be scanned.
+  // See AnalogScanner::normalizePin().
+  volatile uint8_t normalizedPins[SCAN_ORDER_MAX];
 
   // The size of the scan order.
   int scanOrderSize;
 
   // The current index within the scan order.
-  int currentIndex;
+  volatile int currentIndex;
+
+  // The current pin being scanned.
+  volatile uint8_t currentPin;
 
   // An array of pointers to callback routines invoked when
   // new values are available.
@@ -72,6 +81,10 @@ class AnalogScanner {
   // Gets the pin number corresponding to an ADC pin index
   // index. For example, 0 corresponds to pin A0.
   int getPinForIndex(int index);
+
+  // Converts a pin or channel number to a standardized form needed
+  // to form the mask for the ADC.
+  uint8_t normalizePin(uint8_t pin);
 
   // Processes a new ADC input value for the current scan pin.
   void processScan();
@@ -91,7 +104,7 @@ class AnalogScanner {
   // Sets the scan order. A single pin may be specified
   // multiple times in the scan order to increase the rate
   // at which it is read.
-  void setScanOrder(int n, int order[]);
+  void setScanOrder(int n, const int order[]);
   
   // Gets the most recently read value for an analog pin.
   int getValue(int pin);

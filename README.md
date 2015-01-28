@@ -77,10 +77,6 @@ Then, read the latest analog values whenever you like.
         delay(100); // Wait for new values.
     }
 
-Calls expecting a pin number also accept a zero-relative pin index, where 0=A0, 1=A1, and so on. You can either pass the pin number constant defined by the Arduino libraries (A3, for example), or the corresponding analog pin index (3, for example).
-
-**Note:** If you use a pin index that is not supported, zero will be used instead.
-
 Examples
 --------
 The `examples/` subdirectory contains `analog_read_all.ino`, an example program that reads each analog input available on the Uno repeatedly (A0 through A6). The values are written to `Serial` once per second.
@@ -101,7 +97,9 @@ soon as new values are read.
 
     scanner.setCallback(A0, processValue);
 
-The index value is in the range 0 through 15, and represents the zero-relative pin index, where 0=A0 though 15=A15. (Different processors support different numbers of analog pins.) The pin value is the Arduino pin definition constant, from A0 through A15.
+The index value is the zero-relative index of the scan in the pin scan order which was specified. (Different processors support different numbers of analog pins.) The pin value is the pin number specified in the scan order, from A0 through A15.
+
+**NOTE:** Channel numbers can be used instead of pin numbers. See wiring_analog.c for details about how the actual pin index is calculated. This library uses the same method.
 
 **WARNING:** The call to the callback function is processed from within the ADC interrupt handler. This can happen as often as 10,000 times per second, if only one analog pin is in the scan order. The processing function must operate quickly and return. Further, it should not invoke other libraries that are relatively slow, such as `Serial`. Do not write debugging output from the callback handler or you will likely hang the Arduino.
 
@@ -144,7 +142,7 @@ A pin may appear more than once in the scan order to read the pin more frequentl
 
 
 ### `int getValue(int pin)`
-Gets the most recently read value for an analog pin number or pin index.
+Gets the most recently read value for an analog pin number.
   
 ### `void setAnalogReference(int reference)`
 Sets the analog voltage reference. See the built-in
@@ -158,3 +156,8 @@ be invoked by the ADC interrupt handling code.
 ### `void endScanning()`
 Ends scanning the analog pins. Disables the ADC to save
 power.
+
+Release Notes
+-------------
+* 2015-01-27 - Modified the library to work with the Arduino Leonardo. Testing has now been done on the Uno and Leonardo. 
+* 2014-10-17 - Updated the example program to work with the Arduino IDE.
