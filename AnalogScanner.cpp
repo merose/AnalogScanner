@@ -140,6 +140,8 @@ uint8_t AnalogScanner::normalizePin(uint8_t pin) {
   if (pin >= 18) pin -= 18; // allow for channel or pin numbers
 #elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
   if (pin >= 24) pin -= 24; // allow for channel or pin numbers
+#elif defined(ADAFRUIT_FEATHER_M0)
+	pin = g_APinDescription[pin].ulADCChannelNumber;
 #else
   if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
@@ -197,19 +199,32 @@ void AnalogScanner::setAnalogReference(int reference) {
 // Begins scanning the analog input pins.
 void AnalogScanner::beginScanning() {
   pCurrentScanner = this;
+  
+  #if defined(__SAMD21G18A__)
+  ADC->CTRLA.bit.ENABLE = 1;
+  delay(1);
+  ADC->INTENSET.bit.RESRDY = 1;
+  NVIC_EnableIRQ(ADC_IRQn); 	// enable ADC interrupts
+  NVIC_SetPriority(ADC_IRQn, 2); //set priority of the interrupt
+  #else
   sbi(ADCSRA, ADEN); // Enable the ADC.
   delay(1);
   cbi(ADMUX, ADLAR); // Make sure the ADC value is right-justified.
   sbi(ADCSRA, ADIE); // Enable ADC complete interrupts.
-
+  #endif
   startNextScan();    
 }
 
 // Ends scanning the analog input pins. Disables the ADC to
 // save power.
 void AnalogScanner::endScanning() {
+  #if defined(__SAMD21G18A__)
+  ADC->CTRLA.bit.ENABLE = 0;
+  ADC->INTENSET.bit.RESRDY = 0; 
+  #else
   cbi(ADCSRA, ADEN); // Disable the ADC.
   cbi(ADCSRA, ADIE); // Disable ADC complete interrupts.
+  #endif
 }
 
 // Starts the next ADC read.
@@ -220,30 +235,41 @@ void AnalogScanner::startNextScan() {
     }
     currentPin = requestedPins[currentIndex];
     int pin = normalizedPins[currentIndex];
+	#if defined(__SAMD21G18A__)
+		ADC->INPUTCTRL.bit.MUXPOS = pin; 
+		ADC->SWTRIG.bit.START = 1; 
+	#else
 #ifdef MUX5
     // Set whether we're reading from inputs 0-7 or 8-15.
     ADCSRB = (ADCSRB & ~(1 << MUX5)) | (((pin >> 3) & 0x01) << MUX5);
 #endif
     ADMUX = (analogRef << 6) | (pin & 7);
     sbi(ADCSRA, ADSC); // Start the ADC conversion.
+	#endif
   }
 }
 
 // Processes a new value from the ADC.
 void AnalogScanner::processScan() {
   // We must read ADCL first, which locks ADCH until it is read.
+  #if defined(__SAMD21G18A__)
+  int index = getPinIndex(currentPin);
+  int pin = currentPin;
+  values[index] = ADC->RESULT.reg;
+  #else
   int low = ADCL;
   int high = ADCH;
   int index = getPinIndex(currentPin);
   int pin = currentPin;
   values[index] = (high << 8) | low;
-
+  #endif
+  int currentIndexLocal = currentIndex;  //make a local copy of the currentIndex
   // Invoke the next scan before the callback, to make the
   // read rate more uniform.
-  startNextScan();
+startNextScan(); //currentIndex will be updated/wrapped to 0 here
 
   if (pCallback[index] != NULL) {
-    pCallback[index](currentIndex, pin, values[index]);
+    pCallback[index](currentIndexLocal, pin, values[index]); //use the not updated copy of the currentIndex here
   }
 }
 
@@ -255,6 +281,12 @@ void AnalogScanner::scanComplete() {
 
 // Defines an ADC interrupt processing routine that asks the
 // currently active scanner to process a newly scanned value.
+#if defined (__SAMD21G18A__)
+void ADC_Handler() {
+  AnalogScanner::scanComplete();
+}
+#else
 ISR(ADC_vect) {
   AnalogScanner::scanComplete();
 }
+#endif
