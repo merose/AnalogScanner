@@ -263,12 +263,13 @@ void AnalogScanner::processScan() {
   int pin = currentPin;
   values[index] = (high << 8) | low;
   #endif
+  int currentIndexLocal = currentIndex;  //make a local copy of the currentIndex
   // Invoke the next scan before the callback, to make the
   // read rate more uniform.
-  startNextScan();
+startNextScan(); //currentIndex will be updated/wrapped to 0 here
 
   if (pCallback[index] != NULL) {
-    pCallback[index](currentIndex, pin, values[index]);
+    pCallback[index](currentIndexLocal, pin, values[index]); //use the not updated copy of the currentIndex here
   }
 }
 
